@@ -57,6 +57,126 @@ def datasource_with_runtime_data_connector_and_pandas_execution_engine():
 
 
 @pytest.fixture
+def datasource_with_runtime_data_connector_and_pandas_execution_engine_and_multiple_assets():
+    basic_datasource: Datasource = instantiate_class_from_config(
+        yaml.load(
+            """
+    class_name: Datasource
+
+    execution_engine:
+        class_name: PandasExecutionEngine
+
+    data_connectors:
+        runtime_data_connector:
+            module_name: great_expectations.datasource.data_connector
+            class_name: RuntimeDataConnector
+            assets:
+                taxi:
+                    batch_identifiers:
+                        - year
+                        - month
+                taxi_daily:
+                    batch_identifiers:
+                        - year
+                        - month
+                        - day
+    """,
+        ),
+        runtime_environment={"name": "my_datasource"},
+        config_defaults={"module_name": "great_expectations.datasource"},
+    )
+    return basic_datasource
+
+
+def test_me(empty_data_context):
+    # def test_cli_works_from_random_directory_with_config_flag_great_expectations_directory(
+    #         monkeypatch, empty_data_context, tmp_path_factory
+    # ):
+    #     """We don't care about the NOUN here just combinations of the config flag"""
+    #     context = empty_data_context
+    #     runner = CliRunner(mix_stderr=True)
+    #     temp_dir = tmp_path_factory.mktemp("config_flag_check")
+    #     monkeypatch.chdir(temp_dir)
+    #     result = runner.invoke(
+    #
+    context = empty_data_context
+    datasource_yaml: str = f"""
+    class_name: Datasource
+    execution_engine:
+        class_name: PandasExecutionEngine
+    data_connectors:
+        runtime_data_connector:
+            module_name: great_expectations.datasource.data_connector
+            class_name: RuntimeDataConnector
+            runtime_assets:
+                taxi:
+                    batch_identifiers:
+                        - year
+                        - month
+                taxi_daily:
+                    batch_identifiers:
+                        - year
+                        - month
+                        - day
+    """
+
+    context.test_yaml_config(datasource_yaml)
+
+
+def test_pandas_execution_engine_all_keys_present_assets_defined(
+    datasource_with_runtime_data_connector_and_pandas_execution_engine_and_multiple_assets,
+):
+    datasource: Datasource = datasource_with_runtime_data_connector_and_pandas_execution_engine_and_multiple_assets
+    test_df: pd.DataFrame = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
+
+    batch_identifiers = {"year": "2018", "month": "01"}
+    # Verify that all keys in batch_identifiers are acceptable as batch_identifiers (using batch count).
+    batch_request: dict = {
+        "datasource_name": datasource.name,
+        "data_connector_name": "runtime_data_connector",
+        "data_asset_name": "taxi",
+        "runtime_parameters": {
+            "batch_data": test_df,
+        },
+        "batch_identifiers": batch_identifiers,
+    }
+    batch_request: RuntimeBatchRequest = RuntimeBatchRequest(**batch_request)
+    batch_list: List[Batch] = datasource.get_batch_list_from_batch_request(
+        batch_request=batch_request
+    )
+    assert len(batch_list) == 1
+
+
+def test_pandas_execution_engine_all_keys_present_for_batch_identifiers(
+    datasource_with_runtime_data_connector_and_pandas_execution_engine,
+):
+    test_df: pd.DataFrame = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
+    batch_identifiers = {
+        "pipeline_stage_name": "core_processing",
+        "airflow_run_id": 1234567890,
+        "custom_key_0": "custom_value_0",
+    }
+
+    # Verify that all keys in batch_identifiers are acceptable as batch_identifiers (using batch count).
+    batch_request: dict = {
+        "datasource_name": datasource_with_runtime_data_connector_and_pandas_execution_engine.name,
+        "data_connector_name": "test_runtime_data_connector",
+        "data_asset_name": "IN_MEMORY_DATA_ASSET",
+        "runtime_parameters": {
+            "batch_data": test_df,
+        },
+        "batch_identifiers": batch_identifiers,
+    }
+    batch_request: RuntimeBatchRequest = RuntimeBatchRequest(**batch_request)
+    batch_list: List[
+        Batch
+    ] = datasource_with_runtimedata_connector_and_pandas_execution_engine.get_batch_list_from_batch_request(
+        batch_request=batch_request
+    )
+    assert len(batch_list) == 1
+
+
+@pytest.fixture
 def datasource_with_runtime_data_connector_and_sparkdf_execution_engine(spark_session):
     basic_datasource: Datasource = instantiate_class_from_config(
         yaml.load(
@@ -861,6 +981,36 @@ def datasource_with_runtime_data_connector_and_sqlalchemy_execution_engine(db_fi
         test_runtime_data_connector:
             module_name: great_expectations.datasource.data_connector
             class_name: RuntimeDataConnector
+            batch_identifiers:
+                - pipeline_stage_name
+                - airflow_run_id
+                - custom_key_0
+        """,
+        ),
+        runtime_environment={"name": "my_datasource"},
+        config_defaults={"module_name": "great_expectations.datasource"},
+    )
+    return basic_datasource
+
+
+# @pytest.fixture
+def datasource_with_runtime_data_connector_and_sqlalchemy_execution_engine_with_defined_assets(
+    db_file, sa
+):
+    basic_datasource: Datasource = instantiate_class_from_config(
+        yaml.load(
+            f"""
+    class_name: Datasource
+
+    execution_engine:
+        class_name: SqlAlchemyExecutionEngine
+        connection_string: sqlite:///{db_file}
+
+    data_connectors:
+        test_runtime_data_connector:
+            module_name: great_expectations.datasource.data_connector
+            class_name: RuntimeDataConnector
+
             batch_identifiers:
                 - pipeline_stage_name
                 - airflow_run_id

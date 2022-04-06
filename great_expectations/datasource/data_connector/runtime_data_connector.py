@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import great_expectations.exceptions as ge_exceptions
 from great_expectations.core.batch import BatchDefinition, RuntimeBatchRequest
@@ -13,6 +13,9 @@ from great_expectations.core.batch_spec import (
     S3BatchSpec,
 )
 from great_expectations.core.id_dict import IDDict
+from great_expectations.data_context.types.base import assetConfigSchema
+from great_expectations.data_context.util import instantiate_class_from_config
+from great_expectations.datasource.data_connector.asset import Asset
 from great_expectations.datasource.data_connector.data_connector import DataConnector
 from great_expectations.execution_engine import ExecutionEngine
 
@@ -32,6 +35,7 @@ class RuntimeDataConnector(DataConnector):
         execution_engine (ExecutionEngine): An ExecutionEngine
         batch_identifiers (list): a list of keys that must be defined in the batch_identifiers dict of RuntimeBatchRequest
         batch_spec_passthrough (dict): dictionary with keys that will be added directly to batch_spec
+        assets (str or dict) : placeholder as an optional dictionary. str may be used because it is in the sqldataconnector signature
     """
 
     def __init__(
@@ -41,6 +45,7 @@ class RuntimeDataConnector(DataConnector):
         execution_engine: Optional[ExecutionEngine] = None,
         batch_identifiers: Optional[list] = None,
         batch_spec_passthrough: Optional[dict] = None,
+        assets: Optional[Union[str, dict]] = None,
     ):
         logger.debug(f'Constructing RuntimeDataConnector "{name}".')
 
@@ -50,9 +55,58 @@ class RuntimeDataConnector(DataConnector):
             execution_engine=execution_engine,
             batch_spec_passthrough=batch_spec_passthrough,
         )
+        if batch_identifiers:
+            self._batch_identifiers = batch_identifiers
+        else:
+            self._batch_identifiers = []
 
-        self._batch_identifiers = batch_identifiers
         self._refresh_data_references_cache()
+
+        if assets is None:
+            assets = {}
+        _assets: Dict[str, Union[dict, Asset]] = assets
+        self._assets = _assets
+        self._build_assets_from_config(config=assets)
+
+    @property
+    def assets(self):
+        return self._assets
+
+    def _build_assets_from_config(self, config):
+        pass
+
+    # <WILL> Marker this was pulled from other file
+    def _build_assets_from_config(self, config: Dict[str, dict]):
+        for name, asset_config in config.items():
+            if asset_config is None:
+                asset_config = {}
+            asset_config.update({"name": name})
+            new_asset: Asset = self._build_asset_from_config(
+                config=asset_config,
+            )
+            self.assets[name] = new_asset
+            # adding batch_identifiers
+            for identifier in new_asset.batch_identifiers:
+                if identifier not in self._batch_identifiers:
+                    self._batch_identifiers.append(identifier)
+
+    # <WILL> marker this was pulled from the other file
+    def _build_asset_from_config(self, config: dict):
+        runtime_environment: dict = {"data_connector": self}
+        config = assetConfigSchema.load(config)
+        config = assetConfigSchema.dump(config)
+        asset: Asset = instantiate_class_from_config(
+            config=config,
+            runtime_environment=runtime_environment,
+            config_defaults={},
+        )
+        if not asset:
+            raise ge_exceptions.ClassInstantiationError(
+                module_name="great_expectations.datasource.data_connector.asset",
+                package_name=None,
+                class_name=config["class_name"],
+            )
+        return asset
 
     def _refresh_data_references_cache(self):
         self._data_references_cache = {}

@@ -31,6 +31,8 @@ class Asset:
         prefix: Optional[str] = None,
         # Both S3/Azure
         delimiter: Optional[str] = None,
+        # runtime
+        batch_identifiers: Optional[List[str]] = None,
     ):
         self._name = name
         self._base_directory = base_directory
@@ -57,6 +59,9 @@ class Asset:
 
         # Both S3/Azure
         self._delimiter = delimiter
+
+        # runtime
+        self._batch_identifiers = batch_identifiers
 
     @property
     def name(self) -> str:
@@ -113,3 +118,7 @@ class Asset:
     @property
     def delimiter(self) -> Optional[str]:
         return self._delimiter
+
+    @property
+    def batch_identifiers(self) -> Optional[List[str]]:
+        return self._batch_identifiers
