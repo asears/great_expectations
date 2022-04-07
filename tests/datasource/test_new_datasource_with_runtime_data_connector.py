@@ -955,36 +955,6 @@ def datasource_with_runtime_data_connector_and_sqlalchemy_execution_engine(db_fi
     return basic_datasource
 
 
-# @pytest.fixture
-def datasource_with_runtime_data_connector_and_sqlalchemy_execution_engine_with_defined_assets(
-    db_file, sa
-):
-    basic_datasource: Datasource = instantiate_class_from_config(
-        yaml.load(
-            f"""
-    class_name: Datasource
-
-    execution_engine:
-        class_name: SqlAlchemyExecutionEngine
-        connection_string: sqlite:///{db_file}
-
-    data_connectors:
-        test_runtime_data_connector:
-            module_name: great_expectations.datasource.data_connector
-            class_name: RuntimeDataConnector
-
-            batch_identifiers:
-                - pipeline_stage_name
-                - airflow_run_id
-                - custom_key_0
-        """,
-        ),
-        runtime_environment={"name": "my_datasource"},
-        config_defaults={"module_name": "great_expectations.datasource"},
-    )
-    return basic_datasource
-
-
 def test_datasource_with_runtime_data_connector_and_sqlalchemy_execution_engine_self_check(
     db_file, datasource_with_runtime_data_connector_and_sqlalchemy_execution_engine, sa
 ):
