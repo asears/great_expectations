@@ -491,56 +491,6 @@ def test_get_batch_definition_list_from_batch_request_length_one(
     assert batch_definition_list == expected_batch_definition_list
 
 
-def test_get_batch_definition_list_from_batch_request_with_and_without_data_asset_name_multiple_source(
-    basic_datasource,
-):
-    test_df: pd.DataFrame = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
-
-    batch_identifiers = {
-        "airflow_run_id": 1234567890,
-    }
-
-    test_runtime_data_connector: RuntimeDataConnector = (
-        basic_datasource.data_connectors["test_runtime_data_connector"]
-    )
-
-    # data_asset_name is missing
-    batch_request: dict = {
-        "datasource_name": basic_datasource.name,
-        "data_connector_name": test_runtime_data_connector.name,
-        "runtime_parameters": {
-            "batch_data": test_df,
-        },
-        "batch_identifiers": batch_identifiers,
-    }
-    with pytest.raises(TypeError):
-        # noinspection PyUnusedLocal
-        batch_request: RuntimeBatchRequest = RuntimeBatchRequest(**batch_request)
-
-    batch_identifiers = {
-        "airflow_run_id": 9870761,
-    }
-    # test that name can be set as "my_data_asset"
-    batch_request: dict = {
-        "datasource_name": basic_datasource.name,
-        "data_connector_name": test_runtime_data_connector.name,
-        "data_asset_name": "my_data_asset",
-        "runtime_parameters": {
-            "batch_data": test_df,
-        },
-        "batch_identifiers": batch_identifiers,
-    }
-    batch_request: RuntimeBatchRequest = RuntimeBatchRequest(**batch_request)
-    batch_definition_list: List[
-        BatchDefinition
-    ] = test_runtime_data_connector.get_batch_definition_list_from_batch_request(
-        batch_request=batch_request
-    )
-    assert len(batch_definition_list) == 1
-    # check that default value has been set
-    assert batch_definition_list[0]["data_asset_name"] == "my_data_asset"
-
-
 def test_get_batch_definition_list_from_batch_request_with_and_without_data_asset_name(
     basic_datasource,
 ):

@@ -160,6 +160,7 @@ def convert_data_reference_string_to_batch_identifiers_using_regex(
     return data_asset_name, batch_identifiers
 
 
+# this would be
 def _determine_batch_identifiers_using_named_groups(
     match_dict: dict, group_names: List[str]
 ) -> IDDict:

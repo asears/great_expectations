@@ -88,17 +88,8 @@ def datasource_with_runtime_data_connector_and_pandas_execution_engine_and_multi
     return basic_datasource
 
 
-def test_me(empty_data_context):
-    # def test_cli_works_from_random_directory_with_config_flag_great_expectations_directory(
-    #         monkeypatch, empty_data_context, tmp_path_factory
-    # ):
-    #     """We don't care about the NOUN here just combinations of the config flag"""
-    #     context = empty_data_context
-    #     runner = CliRunner(mix_stderr=True)
-    #     temp_dir = tmp_path_factory.mktemp("config_flag_check")
-    #     monkeypatch.chdir(temp_dir)
-    #     result = runner.invoke(
-    #
+def test_yaml_config_for_runtime_data_connector_with_assets(empty_data_context):
+    # NOTE: this test doesn't work yet
     context = empty_data_context
     datasource_yaml: str = f"""
     class_name: Datasource
@@ -142,35 +133,6 @@ def test_pandas_execution_engine_all_keys_present_assets_defined(
     }
     batch_request: RuntimeBatchRequest = RuntimeBatchRequest(**batch_request)
     batch_list: List[Batch] = datasource.get_batch_list_from_batch_request(
-        batch_request=batch_request
-    )
-    assert len(batch_list) == 1
-
-
-def test_pandas_execution_engine_all_keys_present_for_batch_identifiers(
-    datasource_with_runtime_data_connector_and_pandas_execution_engine,
-):
-    test_df: pd.DataFrame = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
-    batch_identifiers = {
-        "pipeline_stage_name": "core_processing",
-        "airflow_run_id": 1234567890,
-        "custom_key_0": "custom_value_0",
-    }
-
-    # Verify that all keys in batch_identifiers are acceptable as batch_identifiers (using batch count).
-    batch_request: dict = {
-        "datasource_name": datasource_with_runtime_data_connector_and_pandas_execution_engine.name,
-        "data_connector_name": "test_runtime_data_connector",
-        "data_asset_name": "IN_MEMORY_DATA_ASSET",
-        "runtime_parameters": {
-            "batch_data": test_df,
-        },
-        "batch_identifiers": batch_identifiers,
-    }
-    batch_request: RuntimeBatchRequest = RuntimeBatchRequest(**batch_request)
-    batch_list: List[
-        Batch
-    ] = datasource_with_runtimedata_connector_and_pandas_execution_engine.get_batch_list_from_batch_request(
         batch_request=batch_request
     )
     assert len(batch_list) == 1
