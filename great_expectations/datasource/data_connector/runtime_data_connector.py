@@ -35,7 +35,6 @@ class RuntimeDataConnector(DataConnector):
         execution_engine (ExecutionEngine): An ExecutionEngine
         batch_identifiers (list): a list of keys that must be defined in the batch_identifiers dict of RuntimeBatchRequest
         batch_spec_passthrough (dict): dictionary with keys that will be added directly to batch_spec
-        assets (str or dict) : placeholder as an optional dictionary. str may be used because it is in the sqldataconnector signature
     """
 
     def __init__(
@@ -45,6 +44,7 @@ class RuntimeDataConnector(DataConnector):
         execution_engine: Optional[ExecutionEngine] = None,
         batch_identifiers: Optional[list] = None,
         batch_spec_passthrough: Optional[dict] = None,
+        # usually a dict, but str in sqldataconnector (need to investigate why)
         assets: Optional[Union[str, dict]] = None,
     ):
         logger.debug(f'Constructing RuntimeDataConnector "{name}".')
