@@ -57,7 +57,7 @@ def datasource_with_runtime_data_connector_and_pandas_execution_engine():
 
 
 @pytest.fixture
-def datasource_with_runtime_data_connector_and_pandas_execution_engine_and_multiple_assets():
+def datasource_runtime_data_connector_multiple_assets():
     basic_datasource: Datasource = instantiate_class_from_config(
         yaml.load(
             """
@@ -80,6 +80,43 @@ def datasource_with_runtime_data_connector_and_pandas_execution_engine_and_multi
                         - year
                         - month
                         - day
+    """,
+        ),
+        runtime_environment={"name": "my_datasource"},
+        config_defaults={"module_name": "great_expectations.datasource"},
+    )
+    return basic_datasource
+
+
+@pytest.fixture
+def datasource_runtime_data_connector_multiple_assets_and_batch_identifiers():
+    basic_datasource: Datasource = instantiate_class_from_config(
+        yaml.load(
+            """
+    class_name: Datasource
+
+    execution_engine:
+        class_name: PandasExecutionEngine
+
+    data_connectors:
+        runtime_data_connector:
+            module_name: great_expectations.datasource.data_connector
+            class_name: RuntimeDataConnector
+            batch_identifiers:
+                - year
+                - month
+                - day
+            assets:
+                taxi:
+                    batch_identifiers:
+                        - year
+                        - month
+                taxi_hourly:
+                    batch_identifiers:
+                        - year
+                        - month
+                        - day
+                        - hour
     """,
         ),
         runtime_environment={"name": "my_datasource"},
@@ -115,9 +152,9 @@ def test_yaml_config_for_runtime_data_connector_with_assets(empty_data_context):
 
 
 def test_pandas_execution_engine_all_keys_present_assets_defined(
-    datasource_with_runtime_data_connector_and_pandas_execution_engine_and_multiple_assets,
+    datasource_runtime_data_connector_multiple_assets,
 ):
-    datasource: Datasource = datasource_with_runtime_data_connector_and_pandas_execution_engine_and_multiple_assets
+    datasource: Datasource = datasource_runtime_data_connector_multiple_assets
     test_df: pd.DataFrame = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
 
     batch_identifiers = {"year": "2018", "month": "01"}

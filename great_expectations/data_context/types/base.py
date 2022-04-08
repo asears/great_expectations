@@ -219,7 +219,6 @@ class AssetConfigSchema(Schema):
     table_name = fields.String(required=False, allow_none=True)
     type = fields.String(required=False, allow_none=True)
 
-    # adding the batch_identifier
     batch_identifiers = fields.List(
         cls_or_instance=fields.Str(), required=False, allow_none=True
     )

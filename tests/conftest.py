@@ -4,7 +4,6 @@ import logging
 import os
 import random
 import shutil
-import sys
 import warnings
 from typing import Dict, List, Optional
 
@@ -52,9 +51,6 @@ from great_expectations.datasource.new_datasource import BaseDatasource, Datasou
 from great_expectations.rule_based_profiler.config import RuleBasedProfilerConfig
 from great_expectations.rule_based_profiler.config.base import (
     ruleBasedProfilerConfigSchema,
-)
-from great_expectations.rule_based_profiler.parameter_builder.simple_date_format_string_parameter_builder import (
-    DEFAULT_CANDIDATE_STRINGS,
 )
 from great_expectations.self_check.util import (
     build_test_backends_list as build_test_backends_list_v3,
@@ -2054,7 +2050,6 @@ data_connectors:
 
 execution_engine:
     class_name: PandasExecutionEngine
-
     """,
         ),
         runtime_environment={
@@ -2064,7 +2059,6 @@ execution_engine:
             "module_name": "great_expectations.datasource",
         },
     )
-
     return basic_datasource
 
 
